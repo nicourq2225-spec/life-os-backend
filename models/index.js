@@ -6,28 +6,22 @@ const process = require('process');
 const basename = path.basename(__filename);
 const db = {};
 
-let sequelize;
-
-// SI DETECTA EL LINK DE RENDER/SUPABASE, USA POSTGRES CON SEGURIDAD SSL
-if (process.env.DATABASE_URL) {
-  sequelize = new Sequelize(process.env.DATABASE_URL, {
-    dialect: 'postgres',
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false
-      }
-    },
-    logging: false
-  });
-} else {
-  // SI ESTÁS EN TU COMPU, SIGUE USANDO LA BASE DE DATOS LOCAL
-  sequelize = new Sequelize({
-    dialect: 'sqlite',
-    storage: './database.sqlite',
-    logging: false
-  });
+// VERIFICACIÓN ANTI-FALLOS: Si no encuentra SUPABASE_URL, tira un aviso claro.
+if (!process.env.SUPABASE_URL) {
+  console.log("⚠️ ATENCIÓN: Render no está encontrando SUPABASE_URL.");
 }
+
+// CONEXIÓN BLINDADA A SUPABASE
+const sequelize = new Sequelize(process.env.SUPABASE_URL, {
+  dialect: 'postgres',
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
+  },
+  logging: false
+});
 
 fs.readdirSync(__dirname)
   .filter(file => {
